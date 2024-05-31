@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "gpio.h": "c",
+        "gpio_register.h": "c",
+        "pwm.h": "c",
+        "hw_timer.h": "c",
+        "esp8266.h": "c",
+        "timer_register.h": "c",
+        "esp_wifi.h": "c",
+        "esp_common.h": "c",
+        "freertos.h": "c",
+        "task.h": "c",
+        "semphr.h": "c"
+    }
+}
