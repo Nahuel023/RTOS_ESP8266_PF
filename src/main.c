@@ -186,7 +186,7 @@ void task_AvoidObstacle(void* ignore) {
       vTaskDelay(50 / portTICK_RATE_MS);
     }
 
-    // Avanzar (suponiendo que tenga una función de movimiento hacia adelante)
+    // Avanzar
     MotorControl(30, 30);
     pwm_start();
     vTaskDelay(10 / portTICK_RATE_MS); //Ajustar el retraso para la velocidad
