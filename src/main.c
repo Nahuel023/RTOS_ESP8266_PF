@@ -215,13 +215,13 @@ void handle_client(int client_socket) {
                  "h1 { color: #333; }"
                  ".control-buttons { display: flex; flex-direction: column; align-items: center; gap: 10px; }"
                  ".direction-buttons { display: flex; flex-direction: row; gap: 10px; }"
-                 "button { background-color: #4CAF50; border: 2px solid #333; color: white; padding: 15px; text-align: center; text-decoration: none; display: inline-block; font-size: 24px; margin: 4px 2px; cursor: pointer; border-radius: 10px; }"
-                 "#avoidButton { background-color: %s; }"
-                 ".distance-display { display: inline-block; padding: 10px; border: 2px solid #333; border-radius: 10px; background-color: #fff; }"
+                 "button { background-color: #4CAF50; border: none; color: white; padding: 15px; text-align: center; text-decoration: none; display: inline-block; font-size: 24px; margin: 4px 2px; cursor: pointer; border-radius: 50%; }"
                  "</style></head><body>"
                  "<h1>Control del Robot</h1>"
                  "<div class=\"control-buttons\">"
-                 "<button id=\"avoidButton\" onclick=\"toggleAvoidance()\">Esquivar Objetos</button>"
+                 "<button onclick=\"fetch('/start')\">Encender</button>"
+                 "<button onclick=\"fetch('/stop')\">Apagar</button>"
+                 "<button onclick=\"fetch('/avoid')\">Esquivar Objetos</button>"
                  "<div class=\"direction-buttons\">"
                  "<button onmousedown=\"fetch('/forward')\" onmouseup=\"fetch('/stop')\">&#9650;</button>"
                  "</div>"
@@ -230,17 +230,10 @@ void handle_client(int client_socket) {
                  "<button onmousedown=\"fetch('/backward')\" onmouseup=\"fetch('/stop')\">&#9660;</button>"
                  "<button onmousedown=\"fetch('/right')\" onmouseup=\"fetch('/stop')\">&#9654;</button>"
                  "</div>"
-                 "<p class=\"distance-display\">Distancia medida: <span id=\"distance\">%d cm</span></p>"
+                 "<p>Distancia medida: <span id=\"distance\">%d cm</span></p>"
                  "<script>"
-                 "let obstacleAvoidance = %s;"
-                 "function toggleAvoidance() {"
-                 "    obstacleAvoidance = !obstacleAvoidance;"
-                 "    fetch('/avoid');"
-                 "    document.getElementById('avoidButton').style.backgroundColor = obstacleAvoidance ? 'red' : 'green';"
-                 "}"
                  "setInterval(() => { fetch('/distance').then(response => response.text()).then(data => { document.getElementById('distance').innerText = data; }); }, 1000);"
-                 "</script></body></html>",
-                 obstacle_avoidance ? "red" : "green", distance, obstacle_avoidance ? "true" : "false");
+                 "</script></body></html>", distance);
         write(client_socket, response, strlen(response));
     } else if (strstr(buffer, "GET /forward") != NULL) {
         MotorControl(30, 30);
@@ -262,14 +255,20 @@ void handle_client(int client_socket) {
         pwm_start();
         const char *response = "HTTP/1.1 200 OK\r\n\r\nOK";
         write(client_socket, response, strlen(response));
+    } else if (strstr(buffer, "GET /start") != NULL) {
+        MotorControl(30, 30);
+        pwm_start();
+        const char *response = "HTTP/1.1 200 OK\r\n\r\nRobot encendido";
+        write(client_socket, response, strlen(response));
     } else if (strstr(buffer, "GET /stop") != NULL) {
         MotorControl(0, 0);
         pwm_start();
-        const char *response = "HTTP/1.1 200 OK\r\n\r\nOK";
+        const char *response = "HTTP/1.1 200 OK\r\n\r\nRobot apagado";
         write(client_socket, response, strlen(response));
     } else if (strstr(buffer, "GET /avoid") != NULL) {
         obstacle_avoidance = !obstacle_avoidance;  // Toggle obstacle avoidance
-        const char *response = "HTTP/1.1 200 OK\r\n\r\nOK";
+        const char *response = obstacle_avoidance ? "HTTP/1.1 200 OK\r\n\r\nEsquivar objetos activado"
+                                                  : "HTTP/1.1 200 OK\r\n\r\nEsquivar objetos desactivado";
         write(client_socket, response, strlen(response));
     } else if (strstr(buffer, "GET /distance") != NULL) {
         char response[64];
@@ -278,13 +277,7 @@ void handle_client(int client_socket) {
     }
 
     close(client_socket);
-
-    // Detener el motor si el servidor se desconecta
-    MotorControl(0, 0);
-    pwm_start();
 }
-
-
 
 void task_http_server(void* ignore) {
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -318,9 +311,6 @@ void wifi_event_handler(System_Event_t *event) {
             break;
         case EVENT_STAMODE_DISCONNECTED:
             printf("Disconnected from WiFi\n");
-            // Detener el motor si se pierde la conexión WiFi
-            MotorControl(0, 0);
-            pwm_start();
             break;
         default:
             break;
