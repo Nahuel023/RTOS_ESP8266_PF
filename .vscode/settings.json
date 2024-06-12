@@ -14,6 +14,9 @@
         "netdb.h": "c",
         "httpd.h": "c",
         "sockets.h": "c",
-        "esp_sta.h": "c"
+        "esp_sta.h": "c",
+        "freertosconfig.h": "c",
+        "queue.h": "c",
+        "stdio.h": "c"
     }
 }
