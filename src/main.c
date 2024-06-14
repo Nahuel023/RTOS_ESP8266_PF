@@ -154,7 +154,7 @@ void task_HC_SR04(void* ignore)
         distance = (end - start) / 58.2; // Velocidad del sonido en cm/us
 
         // Imprime la distancia
-        printf("Distancia: %d cm\n", distance);
+        //printf("Distancia: %d cm\n", distance);
 
         vTaskDelay(300 / portTICK_RATE_MS);
     }
